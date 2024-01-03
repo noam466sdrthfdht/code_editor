@@ -1,0 +1,7 @@
+sections:
+  - Python:
+      files: "*.py"
+      linters:
+        - pep8
+        - pyflakes
+        - mypy
