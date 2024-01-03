@@ -1,13 +1,9 @@
 import streamlit as st
-import pylint.lint
-import pylint.reporters.text
 import io
 import sys
 import os
-
 import tempfile
-
-
+import subprocess
 
 def analyze_code(code):
     # Create a temporary file
@@ -16,18 +12,11 @@ def analyze_code(code):
         temp.write(code)
         temp_name = temp.name
 
-    # Redirect stdout to a string
-    old_stdout = sys.stdout
-    sys.stdout = io.StringIO()
+    # Run flake8 on the temporary file
+    result = subprocess.run(['flake8', temp_name], text=True, capture_output=True)
 
-    # Run pylint on the temporary file
-    pylint.lint.Run([temp_name], reporter=pylint.reporters.text.TextReporter(sys.stdout), exit=False)
-
-    # Get the pylint output
-    output = sys.stdout.getvalue()
-
-    # Restore stdout
-    sys.stdout = old_stdout
+    # Get the flake8 output
+    output = result.stdout
 
     # Delete the temporary file
     if os.path.exists(temp_name):
@@ -37,7 +26,6 @@ def analyze_code(code):
             output += f"\nError deleting temporary file: {e}"
 
     return output
-
 
 st.title('Python Code Analyzer')
 
