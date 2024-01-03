@@ -4,13 +4,36 @@ import pylint.reporters.text
 import io
 import sys
 
+
+import tempfile
+
+
 def analyze_code(code):
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py') as temp:
+        # Write the code to the file
+        temp.write(code)
+        temp_name = temp.name
+
+    # Redirect stdout to a string
     old_stdout = sys.stdout
     sys.stdout = io.StringIO()
-    pylint.lint.Run([code], reporter=pylint.reporters.text.TextReporter(sys.stdout), exit=False)
+
+    # Run pylint on the temporary file
+    pylint.lint.Run([temp_name], reporter=pylint.reporters.text.TextReporter(sys.stdout), exit=False)
+
+    # Get the pylint output
     output = sys.stdout.getvalue()
+
+    # Restore stdout
     sys.stdout = old_stdout
+
+    # Delete the temporary file
+    os.unlink(temp_name)
+
     return output
+
+
 
 st.title('Python Code Analyzer')
 
