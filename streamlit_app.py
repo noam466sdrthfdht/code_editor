@@ -1,32 +1,20 @@
 import streamlit as st
-from openai import OpenAI
+from transformers import pipeline
 
 # Set your OpenAI API key
 
-client = OpenAI(
-    # This is the default and can be omitted
-    api_key="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"
-)
+
 # Function for AI text generation using GPT-2
 def ai_code_completion(user_code):
     try:
-        # Make a request to the OpenAI API for text generation using GPT-2
+      text_generator = pipeline("text-generation", model="gpt2")
 
-
-        response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": user_code,
-            }
-        ],
-        model="davinci-codex",
-    )
-
+    # Generate code completion
+      completed_code = text_generator(user_code, max_length=1000, num_return_sequences=1)[0]['generated_text'].strip()
 
 
     
-        completed_code = response.choices[0].text.strip()
+        
     except Exception as e:
         st.error(f"Error during AI code completion: {e}")
         completed_code = user_code
