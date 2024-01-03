@@ -1,8 +1,8 @@
 import streamlit as st
-import io
 import os
 import tempfile
 import subprocess
+import black
 
 def analyze_code(code):
     # Create a temporary file
@@ -17,11 +17,22 @@ def analyze_code(code):
     # Get the flake8 output
     flake8_output = result.stdout
 
-    # Run black on the temporary file
-    result = subprocess.run(['black', '--diff', '--quiet', temp_name], text=True, capture_output=True)
+    # If there are no flake8 errors, format the code using black
+    if not flake8_output.strip():
+        try:
+            with open(temp_name, 'r+') as f:
+                code = f.read()
+                f.seek(0)
+                f.write(black.format_str(code, mode=black.FileMode()))
+                f.truncate()
 
-    # Get the black output
-    black_output = result.stdout
+            with open(temp_name, 'r') as f:
+                black_output = f.read()
+
+        except Exception as e:
+            black_output = f"\nError formatting code: {e}"
+    else:
+        black_output = ""
 
     # Delete the temporary file
     if os.path.exists(temp_name):
@@ -42,6 +53,6 @@ if st.button('Analyze'):
         if flake8_result:
             st.text_area('Flake8 Analysis Result:', value=flake8_result, height=None, max_chars=None, key=None)
         if black_result:
-            st.text_area('Black Formatting Suggestions:', value=black_result, height=None, max_chars=None, key=None)
+            st.text_area('Formatted Code:', value=black_result, height=None, max_chars=None, key=None)
     else:
         st.write('Please enter some Python code to analyze.')
