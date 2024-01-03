@@ -1,40 +1,24 @@
 import streamlit as st
-import subprocess
-import json
+import pylint.lint
+import pylint.reporters.text
+import io
+import sys
 
-def analyze_code(user_code):
-    try:
-        # Write the user code to a temporary file
-        with open("temp_code.py", "w") as f:
-            f.write(user_code)
+def analyze_code(code):
+    old_stdout = sys.stdout
+    sys.stdout = io.StringIO()
+    pylint.lint.Run([code], reporter=pylint.reporters.text.TextReporter(sys.stdout), exit=False)
+    output = sys.stdout.getvalue()
+    sys.stdout = old_stdout
+    return output
 
-        # Run Coala on the temporary file
-        result = subprocess.run(["coala", "--json", "--option", "coafile.yml", "temp_code.py"], capture_output=True)
+st.title('Python Code Analyzer')
 
-        # Display raw output for debugging
-        st.text("Raw Output:")
-        st.text(result.stdout.decode("utf-8"))
+code = st.text_area('Enter your Python code here:', value='', height=None, max_chars=None, key=None)
 
-        # Check if the output is not empty before parsing as JSON
-        if result.stdout:
-            # Parse and display Coala results
-            output = json.loads(result.stdout.decode("utf-8"))
-            st.json(output)
-        else:
-            st.warning("Coala output is empty.")
-
-    except Exception as e:
-        st.error(f"Error analyzing code: {e}")
-
-def main():
-    st.title("Code Analyzer App")
-
-    # Text area for code input
-    user_code = st.text_area("Write your code here", height=300)
-
-    # Button to analyze code
-    if st.button("Analyze Code"):
-        analyze_code(user_code)
-
-if __name__ == "__main__":
-    main()
+if st.button('Analyze'):
+    if code:
+        result = analyze_code(code)
+        st.text_area('Analysis Result:', value=result, height=None, max_chars=None, key=None)
+    else:
+        st.write('Please enter some Python code to analyze.')
