@@ -1,6 +1,5 @@
 import streamlit as st
 import io
-import sys
 import os
 import tempfile
 import subprocess
@@ -16,16 +15,22 @@ def analyze_code(code):
     result = subprocess.run(['flake8', temp_name], text=True, capture_output=True)
 
     # Get the flake8 output
-    output = result.stdout
+    flake8_output = result.stdout
+
+    # Run black on the temporary file
+    result = subprocess.run(['black', '--diff', '--quiet', temp_name], text=True, capture_output=True)
+
+    # Get the black output
+    black_output = result.stdout
 
     # Delete the temporary file
     if os.path.exists(temp_name):
         try:
             os.unlink(temp_name)
         except Exception as e:
-            output += f"\nError deleting temporary file: {e}"
+            flake8_output += f"\nError deleting temporary file: {e}"
 
-    return output
+    return flake8_output, black_output
 
 st.title('Python Code Analyzer')
 
@@ -33,7 +38,10 @@ code = st.text_area('Enter your Python code here:', value='', height=None, max_c
 
 if st.button('Analyze'):
     if code:
-        result = analyze_code(code)
-        st.text_area('Analysis Result:', value=result, height=None, max_chars=None, key=None)
+        flake8_result, black_result = analyze_code(code)
+        if flake8_result:
+            st.text_area('Flake8 Analysis Result:', value=flake8_result, height=None, max_chars=None, key=None)
+        if black_result:
+            st.text_area('Black Formatting Suggestions:', value=black_result, height=None, max_chars=None, key=None)
     else:
         st.write('Please enter some Python code to analyze.')
