@@ -8,7 +8,7 @@ def analyze_code(user_code):
             f.write(user_code)
 
         # Run Coala on the temporary file
-        result = subprocess.run(["coala", "--json", "temp_code.py"], capture_output=True)
+        result = subprocess.run(["coala", "--json", "--option", "coafile.yml", "temp_code.py"], capture_output=True)
 
         # Parse and display Coala results
         output = result.stdout.decode("utf-8")
