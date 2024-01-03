@@ -8,6 +8,7 @@ import sys
 import tempfile
 
 
+
 def analyze_code(code):
     # Create a temporary file
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.py') as temp:
@@ -29,10 +30,13 @@ def analyze_code(code):
     sys.stdout = old_stdout
 
     # Delete the temporary file
-    os.unlink(temp_name)
+    if os.path.exists(temp_name):
+        try:
+            os.unlink(temp_name)
+        except Exception as e:
+            output += f"\nError deleting temporary file: {e}"
 
     return output
-
 
 
 st.title('Python Code Analyzer')
