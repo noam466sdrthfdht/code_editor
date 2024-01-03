@@ -1,38 +1,31 @@
 import streamlit as st
-from transformers import pipeline
+import subprocess
 
-# Set your OpenAI API key
-
-
-# Function for AI text generation using GPT-2
-def ai_code_completion(user_code):
+def analyze_code(user_code):
     try:
-      text_generator = pipeline("text-generation", model="gpt2")
+        # Write the user code to a temporary file
+        with open("temp_code.py", "w") as f:
+            f.write(user_code)
 
-    # Generate code completion
-      completed_code = text_generator(user_code, max_length=1000, num_return_sequences=1)[0]['generated_text'].strip()
+        # Run Coala on the temporary file
+        result = subprocess.run(["coala", "--json", "temp_code.py"], capture_output=True)
 
+        # Parse and display Coala results
+        output = result.stdout.decode("utf-8")
+        st.json(output)
 
-    
-        
     except Exception as e:
-        st.error(f"Error during AI code completion: {e}")
-        completed_code = user_code
-
-    return completed_code
+        st.error(f"Error analyzing code: {e}")
 
 def main():
-    st.title("Real-Time Collaborative Code Editor with AI Code Completion")
+    st.title("Code Analyzer App")
 
     # Text area for code input
     user_code = st.text_area("Write your code here", height=300)
 
-    # Simulate AI code completion
-    completed_code = ai_code_completion(user_code)
-
-    # Display the completed code
-    st.text("Completed Code:")
-    st.code(completed_code, language='python')
+    # Button to analyze code
+    if st.button("Analyze Code"):
+        analyze_code(user_code)
 
 if __name__ == "__main__":
     main()
