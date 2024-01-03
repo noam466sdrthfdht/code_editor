@@ -1,1 +1,1 @@
-coala-bears
+pylint
